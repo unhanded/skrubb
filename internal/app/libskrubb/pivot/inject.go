@@ -1,4 +1,4 @@
-package libskrubb
+package pivot
 
 import (
 	"os"
@@ -13,14 +13,6 @@ func selfBind(rootpath string) error {
 		"",
 		syscall.MS_BIND|syscall.MS_REC,
 		"")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func doPivot(newRoot string, oldDump string) error {
-	err := syscall.PivotRoot(newRoot, oldDump)
 	if err != nil {
 		return err
 	}
@@ -47,22 +39,24 @@ func dirRemoval(p string) error {
 	return nil
 }
 
-func makeContainerPath(containerName string) string {
-	return filepath.Join("/tmp/skrubb/rootfs")
-}
+func EnterContainer(rootPath string) error {
+	sbErr := selfBind(rootPath)
+	if sbErr != nil {
+		return sbErr
+	}
 
-func ClaimContainerSpace(rootPath string) error {
-	selfBind(rootPath)
-
-	dumpTarget := filepath.Join(rootPath, "/.oldroot/")
+	dumpTarget := filepath.Join(rootPath, ".oldroot/")
 	dumpTargetErr := os.MkdirAll(dumpTarget, 0700)
+
 	if dumpTargetErr != nil {
 		return dumpTargetErr
 	}
-	pivotErr := doPivot(rootPath, dumpTarget)
+
+	pivotErr := syscall.PivotRoot(rootPath, dumpTarget)
 	if pivotErr != nil {
 		return pivotErr
 	}
+
 	chdirErr := os.Chdir("/")
 	if chdirErr != nil {
 		return chdirErr

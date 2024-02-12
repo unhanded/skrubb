@@ -2,11 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/unhanded/skrubb/internal/app/libskrubb"
+	"github.com/unhanded/skrubb/internal/app/libskrubb/container"
 )
 
 func main() {
-	c := libskrubb.AttatchToContainer("S1")
-	fmt.Printf("%s", c.Name)
+	err := container.MakeContainer()
+	if err != nil {
+		fmt.Printf("ERROR - %s", err)
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
